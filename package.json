@@ -1,0 +1,29 @@
+{
+  "name": "customer-ui5",
+  "version": "1.0.0",
+  "description": "Customer Master UI5 App by Sachin Chaudhary",
+  "author": "Sachin Chaudhary",
+  "license": "ISC",
+  "dependencies": {
+    "@sap/cds": "^9",
+    "@cap-js/sqlite": "^2",
+    "express": "^4"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db/customer.db"
+        }
+      },
+      "auth": {
+        "kind": "dummy"
+      }
+    }
+  }
+}

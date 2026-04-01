@@ -1,0 +1,53 @@
+<!-- Welcome Screen — pehli screen jo user dekhta hai -->
+<mvc:View
+    controllerName="customerapp.controller.Welcome"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+
+    <Page showHeader="false">
+        <content>
+            <!-- Center mein Welcome content dikhao -->
+            <FlexBox
+                height="100vh"
+                alignItems="Center"
+                justifyContent="Center"
+                direction="Column">
+
+                <!-- SAP Logo -->
+                <items>
+                    <Image
+                        src="https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg"
+                        width="120px"
+                        class="sapUiMediumMarginBottom"/>
+
+                    <!-- Main Title -->
+                    <Title
+                        text="Customer Master"
+                        level="H1"
+                        class="sapUiLargeMarginBottom"
+                        titleStyle="H1"/>
+
+                    <!-- Subtitle -->
+                    <Text
+                        text="Manage your customers efficiently"
+                        class="sapUiMediumMarginBottom"/>
+
+                    <!-- Go Button — Main screen pe jaao -->
+                    <Button
+                        text="Go to Customer Master"
+                        type="Emphasized"
+                        icon="sap-icon://arrow-right"
+                        press=".onGoPress"
+                        class="sapUiLargeMarginTop"/>
+
+                    <!-- Footer info -->
+                    <Text
+                     text="Ccentrik Infotech Pvt. Ltd."
+                    class="sapUiLargeMarginTop"/>
+                </items>
+            </FlexBox>
+        </content>
+    </Page>
+
+</mvc:View>

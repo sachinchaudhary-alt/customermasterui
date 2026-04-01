@@ -1,0 +1,11 @@
+CustomerID,customerName,city,addressNo,phone
+1,Rahul Sharma,Delhi,A-101,9876543210
+2,Priya Singh,Mumbai,B-202,9876543211
+3,Amit Kumar,Bangalore,C-303,9876543212
+4,Neha Gupta,Chennai,D-404,9876543213
+5,Vikas Yadav,Pune,E-505,9876543214
+6,Pooja Mehta,Kolkata,F-606,9876543215
+7,Ravi Verma,Hyderabad,G-707,9876543216
+8,Sunita Patel,Ahmedabad,H-808,9876543217
+9,Deepak Joshi,Jaipur,I-909,9876543218
+10,Anjali Verma,Lucknow,J-010,9876543219

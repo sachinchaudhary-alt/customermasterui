@@ -1,0 +1,86 @@
+{
+  "_version": "1.32.0",
+  "sap.app": {
+    "id": "customerapp",
+    "type": "application",
+    "title": "Customer Master",
+    "description": "Customer Master Application",
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/customer/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "customerapp.view.Welcome",
+      "type": "XML",
+      "async": true,
+      "id": "welcome"
+    },
+    "dependencies": {
+      "minUI5Version": "1.108.0",
+      "libs": {
+        "sap.ui.core": {},
+        "sap.m": {},
+        "sap.ui.table": {}
+      }
+    },
+    "models": {
+      "": {
+        "type": "sap.ui.model.odata.v4.ODataModel",
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server",
+          "autoExpandSelect": true
+        }
+      }
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "viewPath": "customerapp.view",
+        "controlId": "rootApp",
+        "controlAggregation": "pages",
+        "async": true
+      },
+      "routes": [
+        {
+          "name": "welcome",
+          "pattern": "",
+          "target": "welcome"
+        },
+        {
+          "name": "main",
+          "pattern": "main",
+          "target": "main"
+        }
+      ],
+      "targets": {
+        "welcome": {
+          "viewName": "Welcome",
+          "viewLevel": 1
+        },
+        "main": {
+          "viewName": "Main",
+          "viewLevel": 2
+        }
+      }
+    }
+  }
+}

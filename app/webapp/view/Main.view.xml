@@ -1,0 +1,66 @@
+<mvc:View
+    controllerName="customerapp.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:table="sap.ui.table"
+    displayBlock="true">
+
+    <Page title="Customer Master">
+
+        <headerContent>
+            <Button text="Create" type="Emphasized" icon="sap-icon://add" press=".onCreatePress"/>
+            <Button text="View" type="Default" icon="sap-icon://eye" press=".onViewPress"/>
+            <Button text="Edit" type="Default" icon="sap-icon://edit" press=".onEditPress"/>
+            <Button text="Delete" type="Reject" icon="sap-icon://delete" press=".onDeletePress"/>
+        </headerContent>
+
+        <content>
+            <Toolbar>
+                <Title text="Customer List"/>
+                <ToolbarSpacer/>
+                <SearchField
+                    id="searchField"
+                    placeholder="Search by name or city..."
+                    search=".onSearch"
+                    liveChange=".onSearch"
+                    width="300px"/>
+            </Toolbar>
+
+            <table:Table
+                id="customerTable"
+                rows="{/Customers}"
+                selectionMode="MultiToggle"
+                visibleRowCount="10"
+                alternateRowColors="true"
+                class="sapUiMediumMarginTop">
+
+                <table:columns>
+                    <table:Column width="100px">
+                        <Label text="Customer ID"/>
+                        <table:template><Text text="{CustomerID}"/></table:template>
+                    </table:Column>
+
+                    <table:Column width="200px">
+                        <Label text="Customer Name"/>
+                        <table:template><Text text="{customerName}"/></table:template>
+                    </table:Column>
+
+                    <table:Column width="150px">
+                        <Label text="City"/>
+                        <table:template><Text text="{city}"/></table:template>
+                    </table:Column>
+
+                    <table:Column width="150px">
+                        <Label text="Address No."/>
+                        <table:template><Text text="{addressNo}"/></table:template>
+                    </table:Column>
+
+                    <table:Column width="150px">
+                        <Label text="Phone"/>
+                        <table:template><Text text="{phone}"/></table:template>
+                    </table:Column>
+                </table:columns>
+            </table:Table>
+        </content>
+    </Page>
+</mvc:View>
