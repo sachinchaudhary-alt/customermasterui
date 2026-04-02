@@ -24,6 +24,9 @@
       "auth": {
         "kind": "dummy"
       }
+    },
+    "static": {
+      "root": "app/webapp"
     }
   }
 }
