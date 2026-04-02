@@ -219,22 +219,23 @@ sap.ui.define([
             // Server se saare customers fetch karo
             // Sabse bada CustomerID dhundo aur +1 karo
             // Yeh next available ID hogi
-            var oModel = this.getView().getModel();
-            var oListBinding = oModel.bindList("/Customers");
-
-            oListBinding.requestContexts().then(function(aContexts) {
-                var iMaxId = 0;
-                // Har customer ka ID check karo
-                aContexts.forEach(function(oCtx) {
-                    var iId = oCtx.getProperty("CustomerID");
-                    if (iId > iMaxId) iMaxId = iId; // Sabse bada ID track karo
-                });
-                // Next available ID = max + 1
-                that._oIdInput.setValue(String(iMaxId + 1));
-            }).catch(function() {
-                // Agar server se data na aaye toh default 1 set karo
-                that._oIdInput.setValue("1");
-            });
+          // ─── AUTO ID GENERATE ───
+// Direct fetch se saare customers ka data lo
+// Sabse bada CustomerID + 1 = next available ID
+fetch("/odata/v4/customer/Customers?$select=CustomerID&$orderby=CustomerID desc&$top=1")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.value && data.value.length > 0) {
+            // Sabse bada ID mil gaya — +1 karo
+            that._oIdInput.setValue(String(data.value[0].CustomerID + 1));
+        } else {
+            // Koi customer nahi hai — 1 se shuru karo
+            that._oIdInput.setValue("1");
+        }
+    })
+    .catch(function() {
+        that._oIdInput.setValue("1");
+    });
 
             // Dialog kholo
             this._oCreateDialog.open();
