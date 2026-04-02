@@ -19,11 +19,17 @@
                 <Title text="Customer List"/>
                 <ToolbarSpacer/>
                 <SearchField
-                    id="searchField"
-                    placeholder="Search by name or city..."
-                    search=".onSearch"
-                    liveChange=".onSearch"
-                    width="300px"/>
+    id="searchField"
+    placeholder="Search by name, city or phone..."
+    search=".onSearch"
+    liveChange=".onSearch"
+    width="300px"/>
+<Button
+    id="micButton"
+    icon="sap-icon://microphone"
+    tooltip="Click to speak"
+    type="Emphasized"
+    press=".onMicPress"/>
             </Toolbar>
 
             <table:Table

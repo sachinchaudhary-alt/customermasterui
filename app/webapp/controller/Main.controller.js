@@ -8,6 +8,7 @@
 // - Edit: Customer ki city, address, phone update karna
 // - Delete: Customer hatana
 // - Search: Case insensitive search
+// - Voice: Bolkar commands dena (Web Speech API)
 //
 // SAP UI5 MVC pattern follow karta hai:
 // Model (OData) → View (XML) → Controller (JS)
@@ -380,7 +381,6 @@ sap.ui.define([
 
             if (!this._oEditDialog) {
                 // ─── Edit ke liye sirf 3 fields ───
-                // City, Address, Phone — yahi edit ho sakte hain
                 this._oEditCityInput = new Input({
                     placeholder: "Enter City",
                     liveChange: function(oEvent) {
@@ -419,10 +419,10 @@ sap.ui.define([
                             // ─── Read Only Fields ───
                             // CustomerID aur Name sirf dikhenge — edit nahi honge
                             new Label({ text: "Customer ID (Read Only)" }),
-                            new Input({ id: "editIdDisplay", enabled: false }), // enabled:false = read only
+                            new Input({ id: "editIdDisplay", enabled: false }),
 
                             new Label({ text: "Customer Name (Read Only)" }),
-                            new Input({ id: "editNameDisplay", enabled: false }), // read only
+                            new Input({ id: "editNameDisplay", enabled: false }),
 
                             // ─── Editable Fields ───
                             new Label({ text: "City", required: true }),
@@ -436,7 +436,6 @@ sap.ui.define([
                         ]
                     }).addStyleClass("sapUiSmallMargin"),
 
-                    // Update button — _updateCustomer function chalata hai
                     beginButton: new Button({
                         text: "Update",
                         type: "Emphasized",
@@ -452,11 +451,8 @@ sap.ui.define([
             }
 
             // ─── Purana data fill karo ───
-            // Read only fields mein current values dikhao
             sap.ui.getCore().byId("editIdDisplay").setValue(String(oData.CustomerID));
             sap.ui.getCore().byId("editNameDisplay").setValue(oData.customerName);
-
-            // Editable fields mein current values pre-fill karo
             this._oEditCityInput.setValue(oData.city);
             this._oEditAddressInput.setValue(oData.addressNo);
             this._oEditPhoneInput.setValue(oData.phone);
@@ -468,12 +464,10 @@ sap.ui.define([
         },
 
         // ─── UPDATE CUSTOMER ───
-        // Edit dialog ka Update button press hone par chalta hai
-        // OData PATCH request se sirf changed fields update hote hain
+        // OData PATCH se sirf changed fields update karo
         _updateCustomer: function() {
             var sPhone = this._oEditPhoneInput.getValue();
 
-            // Phone validation
             if (sPhone.length !== 10) {
                 MessageToast.show("Phone number must be exactly 10 digits!");
                 return;
@@ -487,8 +481,7 @@ sap.ui.define([
                 return;
             }
 
-            // ─── OData PATCH ───
-            // setProperty se sirf yeh 3 fields update honge
+            // setProperty — sirf yeh 3 fields update honge
             // CustomerID aur customerName untouched rahenge
             this._oCurrentEditContext.setProperty("city", sCity);
             this._oCurrentEditContext.setProperty("addressNo", sAddress);
@@ -502,19 +495,17 @@ sap.ui.define([
             });
 
             this._oEditDialog.close();
-            this.byId("customerTable").clearSelection(); // Selection clear karo
+            this.byId("customerTable").clearSelection();
         },
 
         // ═══════════════════════════════════════════════════════════
         // ON DELETE PRESS — Delete button click hone par chalta hai
-        // Table mein selected rows delete karo
-        // Pehle confirm dialog dikhata hai — accidental delete se bachao
+        // Selected rows delete karo — pehle confirm maango
         // ═══════════════════════════════════════════════════════════
         onDeletePress: function() {
             var oTable = this.byId("customerTable");
             var aSelectedIndices = oTable.getSelectedIndices();
 
-            // Koi row select nahi ki
             if (aSelectedIndices.length === 0) {
                 MessageBox.warning("Please select at least one customer to delete!");
                 return;
@@ -525,7 +516,6 @@ sap.ui.define([
                 "Are you sure you want to delete " + aSelectedIndices.length + " customer(s)?",
                 {
                     onClose: function(sAction) {
-                        // Sirf OK dabane par delete karo
                         if (sAction === MessageBox.Action.OK) {
                             this._deleteSelectedCustomers(oTable, aSelectedIndices);
                         }
@@ -539,18 +529,185 @@ sap.ui.define([
         _deleteSelectedCustomers: function(oTable, aSelectedIndices) {
             var oBinding = oTable.getBinding("rows");
 
-            // ─── Reverse order mein delete karo ───
-            // Agar seedha order mein delete karein toh index shift ho jaata hai
-            // Example: [0,1,2] mein 0 delete kiya toh 1 ban jaata hai 0
-            // Reverse se yeh problem nahi hoti
+            // Reverse order mein delete karo — index shift problem se bachne ke liye
             aSelectedIndices.reverse().forEach(function(iIndex) {
                 var oContext = oBinding.getContexts()[iIndex];
-                if (oContext) oContext.delete(); // OData DELETE request
+                if (oContext) oContext.delete();
             });
 
-            oTable.clearSelection(); // Table selection clear karo
+            oTable.clearSelection();
             MessageToast.show("Customer(s) deleted successfully!");
+        },
+
+        // ═══════════════════════════════════════════════════════════
+        // ON MIC PRESS — Mic button click hone par chalta hai
+        // Browser ka Web Speech API use karta hai
+        // User jo bolta hai usse text mein convert karta hai
+        // Phir us text ke hisaab se action leta hai
+        //
+        // Supported Voice Commands:
+        // "create" / "add"        → Create dialog khulega
+        // "view all" / "show all" → Saare customers dikhenge
+        // "view Rahul"            → Rahul naam se search hogi
+        // "view 5"                → ID 5 wala customer dikhega
+        // "delete"                → Delete warning aayega
+        // "edit"                  → Edit dialog aayega
+        // ═══════════════════════════════════════════════════════════
+        onMicPress: function() {
+            var that = this;
+
+            // Check karo ki browser Speech Recognition support karta hai ya nahi
+            // Chrome mein webkitSpeechRecognition, Firefox mein SpeechRecognition
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                MessageToast.show("Sorry! Your browser does not support voice recognition. Use Chrome!");
+                return;
+            }
+
+            // Speech Recognition object banao
+            var oRecognition = new SpeechRecognition();
+            oRecognition.lang = 'en-US';        // English language set karo
+            oRecognition.interimResults = false; // Sirf final result chahiye — interim nahi
+            oRecognition.maxAlternatives = 1;   // Ek hi best result chahiye
+
+            // Mic button ka icon change karo — recording chal rahi hai signal
+            this.byId("micButton").setIcon("sap-icon://stop");
+            MessageToast.show("🎤 Listening... Speak now!");
+
+            // Speech recognition start karo — mic access maangega browser
+            oRecognition.start();
+
+            // ─── RESULT EVENT ───
+            // Jab user bolta hai aur recognition complete hoti hai yeh fire hota hai
+            oRecognition.onresult = function(event) {
+                // Jo bola uska text lo — lowercase mein convert karo comparison ke liye
+                var sTranscript = event.results[0][0].transcript.toLowerCase().trim();
+                MessageToast.show("You said: \"" + sTranscript + "\"");
+
+                // Mic button icon wapas microphone pe set karo
+                that.byId("micButton").setIcon("sap-icon://microphone");
+
+                // ═══════════════════════════════════════════════════
+                // VOICE COMMANDS PROCESSING
+                // Jo bola uske hisaab se action lo
+                // ═══════════════════════════════════════════════════
+
+                // ─── CREATE command ───
+                // "create", "add", "new customer" bolne par Create dialog khulega
+                if (sTranscript.includes("create") ||
+                    sTranscript.includes("add") ||
+                    sTranscript.includes("new customer")) {
+                    that.onCreatePress();
+                }
+
+                // ─── VIEW ALL command ───
+                // "view all", "show all", "all customers" bolne par sab dikhenge
+                else if (sTranscript.includes("view all") ||
+                         sTranscript.includes("show all") ||
+                         sTranscript.includes("all customers")) {
+                    // Table mein sab customers dikhao — filter hatao
+                    var oTable = that.byId("customerTable");
+                    oTable.getBinding("rows").filter([]);
+                    MessageToast.show("Showing all customers");
+                }
+
+                // ─── VIEW SPECIFIC command ───
+                // "view Rahul" ya "view 5" bolne par specific customer dikhega
+                // "view" ke baad wala word customer naam ya ID hai
+                else if (sTranscript.includes("view") ||
+                         sTranscript.includes("search") ||
+                         sTranscript.includes("find") ||
+                         sTranscript.includes("show")) {
+
+                    // "view/search/find/show" word hatao — baaki customer naam/ID hai
+                    var sQuery = sTranscript
+                        .replace("view", "")
+                        .replace("search", "")
+                        .replace("find", "")
+                        .replace("show", "")
+                        .replace("customer", "")
+                        .trim();
+
+                    if (sQuery) {
+                        // SearchField mein value set karo — user ko dikh sake
+                        that.byId("searchField").setValue(sQuery);
+
+                        var oTableView = that.byId("customerTable");
+                        var oBinding = oTableView.getBinding("rows");
+
+                        var aFilters = [];
+
+                        // Number hai toh ID se exact match karo
+                        if (!isNaN(sQuery)) {
+                            aFilters = [new Filter(
+                                "CustomerID",
+                                FilterOperator.EQ,
+                                parseInt(sQuery)
+                            )];
+                        } else {
+                            // Text hai toh naam se contains search karo — case insensitive
+                            aFilters = [new Filter({
+                                path: "customerName",
+                                operator: FilterOperator.Contains,
+                                value1: sQuery,
+                                caseSensitive: false
+                            })];
+                        }
+
+                        oBinding.filter(aFilters);
+                        MessageToast.show("Showing results for: \"" + sQuery + "\"");
+                    }
+                }
+
+                // ─── DELETE command ───
+                // "delete" ya "remove" bolne par Delete function chalega
+                else if (sTranscript.includes("delete") ||
+                         sTranscript.includes("remove")) {
+                    that.onDeletePress();
+                }
+
+                // ─── EDIT command ───
+                // "edit" ya "update" bolne par Edit function chalega
+                else if (sTranscript.includes("edit") ||
+                         sTranscript.includes("update")) {
+                    that.onEditPress();
+                }
+
+                // ─── UNRECOGNIZED command ───
+                // Koi bhi command match nahi hua
+                else {
+                    MessageToast.show(
+                        "Command not recognized: \"" + sTranscript + "\". " +
+                        "Try: create, view all, view [name], delete, edit"
+                    );
+                }
+            };
+
+            // ─── ERROR EVENT ───
+            // Mic access nahi mila ya koi aur error aayi
+            oRecognition.onerror = function(event) {
+                // Icon wapas normal karo
+                that.byId("micButton").setIcon("sap-icon://microphone");
+
+                if (event.error === 'not-allowed') {
+                    // User ne mic permission deny ki
+                    MessageToast.show("Microphone access denied! Please allow mic permission in browser.");
+                } else if (event.error === 'no-speech') {
+                    // Kuch bola nahi
+                    MessageToast.show("No speech detected. Please try again!");
+                } else {
+                    MessageToast.show("Voice Error: " + event.error);
+                }
+            };
+
+            // ─── END EVENT ───
+            // Recognition khatam hone par icon wapas normal karo
+            oRecognition.onend = function() {
+                that.byId("micButton").setIcon("sap-icon://microphone");
+            };
         }
 
     });
+
 });

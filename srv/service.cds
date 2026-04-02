@@ -8,3 +8,4 @@ service CustomerService {
     // Isse GET, POST, PUT, DELETE sab automatically ban jaata hai
     entity Customers as projection on master.Customers;
 }
+
